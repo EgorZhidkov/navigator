@@ -1,0 +1,16 @@
+{
+  "name": "kafka-to-redis",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^20.11.19",
+    "bun-types": "latest",
+    "kafkajs": "^2.2.4",
+    "redis": "^4.6.13",
+    "winston": "^3.11.0"
+  }
+}
