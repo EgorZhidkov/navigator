@@ -97,6 +97,18 @@ services:
       kafka:
         condition: service_started
 
+  optimize-map:
+    build:
+      context: ./optimizeMap
+      dockerfile: Dockerfile
+    ports:
+      - '8001:8000'
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_URL: redis://redis:6379
+
 volumes:
   postgres_data:
   redis_data:

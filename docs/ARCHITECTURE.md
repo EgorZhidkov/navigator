@@ -10,10 +10,12 @@ GeoIndexService - это распределенная система для ин
 graph TD
     A[Клиент] --> B[PostgreSQL]
     A --> C[Redis]
+    A --> H[optimize-map]
     B --> D[postgres-to-kafka]
     D --> E[Kafka]
     E --> F[kafka-to-redis]
     F --> C
+    C --> H
     G[Импорт данных] --> B
 ```
 
@@ -96,6 +98,62 @@ sequenceDiagram
     S->>R: HSET place:{id}
 ```
 
+### 6. optimize-map
+
+**Роль:** Сервис для оптимизации данных карты и управления маршрутами.
+
+**Особенности:**
+- REST API для работы с геоданными
+- Интеграция с Redis для быстрого доступа к данным
+- Поддержка кластеризации объектов
+- Оптимизация отображения при разных масштабах
+
+**API Endpoints:**
+- `GET /spaceObject` - данные космических объектов
+- `GET /spaceObjects` - список космических объектов
+- `POST /tracks` - информация о треках
+- `GET /calculateMapData` - коллекция объектов для карты
+
+**Технологии:**
+- Express.js для API
+- Redis для кэширования
+- Turf.js для работы с геоданными
+- Winston для логирования
+
+**Архитектура сервиса:**
+```mermaid
+graph TD
+    A[Клиент] --> B[optimize-map API]
+    B --> C[Redis]
+    B --> D[Track Service]
+    B --> E[RemoteObjectManager]
+    D --> F[Turf.js]
+    E --> G[Clustering]
+    E --> H[Feature Collection]
+    I[Logger] --> B
+    I --> D
+    I --> E
+```
+
+**Процесс обработки запроса:**
+```mermaid
+sequenceDiagram
+    participant C as Клиент
+    participant A as API
+    participant R as Redis
+    participant T as Track Service
+    participant O as RemoteObjectManager
+    
+    C->>A: GET /calculateMapData
+    A->>R: GEOADD places:geo
+    R-->>A: Результаты поиска
+    A->>O: Кластеризация объектов
+    O-->>A: Кластеризованные объекты
+    A->>T: Создание треков
+    T-->>A: Треки
+    A-->>C: Ответ
+```
+
 ## Поток данных
 
 ### 1. Импорт данных
@@ -118,6 +176,7 @@ graph LR
     D --> E[Kafka]
     E --> F[kafka-to-redis]
     F --> G[Redis]
+    G --> H[optimize-map]
 ```
 
 ## Масштабирование
@@ -132,6 +191,7 @@ graph TD
     C --> D
     D --> E[Redis Cluster]
     E --> F[Application Servers]
+    E --> G[optimize-map Servers]
 ```
 
 ## Мониторинг
@@ -141,6 +201,7 @@ graph TD
     A[Prometheus] --> B[PostgreSQL Metrics]
     A --> C[Redis Metrics]
     A --> D[Kafka Metrics]
+    A --> H[optimize-map Metrics]
     E[Grafana] --> A
 ```
 
@@ -161,6 +222,11 @@ graph TD
    - SASL для аутентификации
    - ACL для контроля доступа
 
+4. **optimize-map:**
+   - Валидация входных данных
+   - Ограничение размера запросов
+   - Логирование всех операций
+
 ## Резервное копирование
 
 ```mermaid
@@ -169,6 +235,8 @@ graph TD
     A --> C[Base Backup]
     D[Redis] --> E[RDB]
     D --> F[AOF]
+    G[optimize-map] --> H[Backup Config]
+    G --> I[Backup Code]
 ```
 
 ## Ограничения и рекомендации
@@ -188,6 +256,11 @@ graph TD
    - Мониторинг отставания потребителей
    - Регулярная очистка старых данных
 
+4. **optimize-map:**
+   - Мониторинг времени ответа
+   - Оптимизация запросов к Redis
+   - Регулярное обновление зависимостей
+
 ## Развертывание
 
 ### Требования к окружению
@@ -205,6 +278,7 @@ graph TD
 - Kafka: 9092
 - Redis Commander: 8081
 - Kafka UI: 8080
+- optimize-map: 8001
 
 ## Устранение неполадок
 
@@ -225,10 +299,16 @@ graph TD
    - Проверка отставания потребителей
    - Проверка доступности топиков
 
+4. **Проблемы с optimize-map:**
+   - Проверка подключения к Redis
+   - Проверка логов на ошибки
+   - Проверка доступности API
+
 ### Логи
 
 - PostgreSQL: `/var/log/postgresql/postgresql.log`
 - Redis: `/var/log/redis/redis.log`
 - Kafka: `/var/log/kafka/server.log`
 - postgres-to-kafka: `docker logs geoindexservice-postgres-to-kafka-1`
-- kafka-to-redis: `docker logs geoindexservice-kafka-to-redis-1` 
+- kafka-to-redis: `docker logs geoindexservice-kafka-to-redis-1`
+- optimize-map: `docker logs geoindexservice-optimize-map-1` 
