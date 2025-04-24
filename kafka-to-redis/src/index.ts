@@ -19,7 +19,13 @@ async function main() {
       eachMessage: async ({ topic, partition, message }) => {
         try {
           const place = JSON.parse(message.value?.toString() || '{}');
-          await addPlaceToGeoIndex(place);
+          if (place.operation === 'delete') {
+            await redisClient.zRem('places:geo', place.id);
+            await redisClient.del(`place:${place.id}`);
+            logger.info(`Deleted place ${place.id} from Redis`);
+          } else {
+            await addPlaceToGeoIndex(place);
+          }
           logger.info(
             `Processed message from topic ${topic}, partition ${partition}`
           );

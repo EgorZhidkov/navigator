@@ -21,6 +21,7 @@ async function main() {
     client.on('notification', async (msg) => {
       if (msg.channel === 'places_changes') {
         const payload = JSON.parse(msg.payload);
+        payload.operation = msg.payload.operation || 'update';
 
         // Получаем координаты в формате PostGIS
         const coordinatesResult = await client.query(
