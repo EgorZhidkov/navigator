@@ -34,6 +34,7 @@ graph TD
 ```mermaid
 erDiagram
     places ||--o{ place_types : has
+    places ||--o{ route_points : "is part of"
     places {
         int id PK
         string name
@@ -43,6 +44,29 @@ erDiagram
         int type_id FK
     }
     place_types {
+        int id PK
+        string name
+        string description
+    }
+    routes ||--o{ route_points : contains
+    routes {
+        int id PK
+        string name
+        string description
+        int type_id FK
+        int author_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+    route_points {
+        int id PK
+        int route_id FK
+        int place_id FK
+        int order_index
+        string description
+        timestamp visit_time
+    }
+    route_types {
         int id PK
         string name
         string description
@@ -113,6 +137,12 @@ sequenceDiagram
 - `GET /spaceObjects` - список космических объектов
 - `POST /tracks` - информация о треках
 - `GET /calculateMapData` - коллекция объектов для карты
+- `GET /routes` - список всех маршрутов
+- `GET /routes/:id` - информация о конкретном маршруте
+- `POST /routes` - создание нового маршрута
+- `PUT /routes/:id` - обновление маршрута
+- `DELETE /routes/:id` - удаление маршрута
+- `GET /route-types` - список типов маршрутов
 
 **Технологии:**
 - Express.js для API
@@ -275,10 +305,97 @@ graph TD
 
 - PostgreSQL: 5432
 - Redis: 6379
-- Kafka: 9092
-- Redis Commander: 8081
-- Kafka UI: 8080
-- optimize-map: 8001
+- optimize-map: 8000
+
+### Docker Compose
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: geoindex
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.0
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  optimize-map:
+    build: ./optimizeMap
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=geoindex
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+### Запуск
+
+1. Клонируйте репозиторий
+2. Перейдите в директорию проекта
+3. Запустите сервисы:
+```bash
+docker-compose up -d
+```
+
+4. Примените миграции базы данных:
+```bash
+docker-compose exec postgres psql -U postgres -d geoindex -f /app/migrations/002_create_routes_tables.sql
+docker-compose exec postgres psql -U postgres -d geoindex -f /app/migrations/003_migrate_existing_routes.sql
+```
+
+### Проверка работоспособности
+
+1. Проверьте статус сервисов:
+```bash
+docker-compose ps
+```
+
+2. Проверьте логи:
+```bash
+docker-compose logs -f optimize-map
+```
+
+3. Проверьте API:
+```bash
+curl http://localhost:8000/routes
+curl http://localhost:8000/route-types
+```
 
 ## Устранение неполадок
 
@@ -311,4 +428,211 @@ graph TD
 - Kafka: `/var/log/kafka/server.log`
 - postgres-to-kafka: `docker logs geoindexservice-postgres-to-kafka-1`
 - kafka-to-redis: `docker logs geoindexservice-kafka-to-redis-1`
-- optimize-map: `docker logs geoindexservice-optimize-map-1` 
+- optimize-map: `docker logs geoindexservice-optimize-map-1`
+
+## Схема базы данных
+
+### Таблицы
+
+#### 1. place_types
+Таблица для хранения типов мест.
+
+```sql
+CREATE TABLE place_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT
+);
+```
+
+**Назначение:** Хранит категории мест (достопримечательности, парки, музеи и т.д.).
+
+#### 2. places
+Таблица для хранения информации о местах с поддержкой геопространственных данных.
+
+```sql
+CREATE TABLE places (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    coordinates geography(POINT) NOT NULL,
+    type_id INTEGER REFERENCES place_types(id),
+    description TEXT,
+    opening_hours VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Назначение:** Основная таблица для хранения информации о местах с их географическими координатами.
+
+#### 3. route_types
+Таблица для хранения типов маршрутов.
+
+```sql
+CREATE TABLE route_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Назначение:** Хранит категории маршрутов (образовательные, технические, исторические и т.д.).
+
+#### 4. routes
+Таблица для хранения маршрутов.
+
+```sql
+CREATE TABLE routes (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    type_id INTEGER REFERENCES route_types(id),
+    author_id INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Назначение:** Хранит информацию о маршрутах, их типах и авторах.
+
+#### 5. route_points
+Таблица для хранения точек маршрутов.
+
+```sql
+CREATE TABLE route_points (
+    id SERIAL PRIMARY KEY,
+    route_id INTEGER REFERENCES routes(id) ON DELETE CASCADE,
+    place_id INTEGER REFERENCES places(id) ON DELETE CASCADE,
+    order_index INTEGER NOT NULL,
+    description TEXT,
+    visit_time TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_route_point_order UNIQUE (route_id, order_index)
+);
+```
+
+**Назначение:** Хранит точки маршрутов с их порядком и временем посещения.
+
+### Индексы
+
+#### 1. Геопространственные индексы
+```sql
+CREATE INDEX places_coordinates_idx ON places USING GIST (coordinates);
+```
+**Назначение:** Оптимизирует геопространственные запросы (поиск по радиусу, поиск ближайших объектов).
+
+#### 2. Индексы для маршрутов
+```sql
+CREATE INDEX idx_route_points_route_id ON route_points(route_id);
+CREATE INDEX idx_route_points_place_id ON route_points(place_id);
+CREATE INDEX idx_routes_type_id ON routes(type_id);
+```
+**Назначение:** Оптимизируют запросы по поиску точек маршрута и фильтрации маршрутов по типу.
+
+### Функции и триггеры
+
+#### 1. Функция обновления updated_at
+```sql
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+```
+**Назначение:** Автоматически обновляет поле updated_at при изменении записи.
+
+#### 2. Функция уведомлений об изменениях
+```sql
+CREATE OR REPLACE FUNCTION notify_places_changes()
+RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM pg_notify(
+        'places_changes',
+        json_build_object(
+            'operation', TG_OP,
+            'id', COALESCE(NEW.id, OLD.id),
+            'name', COALESCE(NEW.name, OLD.name),
+            'coordinates', COALESCE(NEW.coordinates::text, OLD.coordinates::text),
+            'type_id', COALESCE(NEW.type_id, OLD.type_id),
+            'description', COALESCE(NEW.description, OLD.description),
+            'opening_hours', COALESCE(NEW.opening_hours, OLD.opening_hours)
+        )::text
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+```
+**Назначение:** Отправляет уведомления об изменениях в таблице places через механизм LISTEN/NOTIFY.
+
+### Триггеры
+
+#### 1. Триггеры обновления updated_at
+```sql
+CREATE TRIGGER update_routes_updated_at
+    BEFORE UPDATE ON routes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_route_points_updated_at
+    BEFORE UPDATE ON route_points
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_route_types_updated_at
+    BEFORE UPDATE ON route_types
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+```
+**Назначение:** Автоматически обновляют поле updated_at при изменении записей в соответствующих таблицах.
+
+#### 2. Триггер уведомлений об изменениях
+```sql
+CREATE TRIGGER places_changes_trigger
+    AFTER INSERT OR UPDATE OR DELETE
+    ON places
+    FOR EACH ROW
+    EXECUTE FUNCTION notify_places_changes();
+```
+**Назначение:** Отслеживает изменения в таблице places и отправляет уведомления.
+
+### Ограничения
+
+1. **Уникальный порядок точек в маршруте:**
+```sql
+CONSTRAINT unique_route_point_order UNIQUE (route_id, order_index)
+```
+**Назначение:** Гарантирует уникальность порядкового номера точки в рамках одного маршрута.
+
+2. **Внешние ключи:**
+- `places.type_id` -> `place_types.id` - связь места с его типом
+- `routes.type_id` -> `route_types.id` - связь маршрута с его типом (образовательный, технический и т.д.)
+- `route_points.route_id` -> `routes.id` - связь точки маршрута с маршрутом
+- `route_points.place_id` -> `places.id` - связь точки маршрута с местом
+
+**Назначение:** Обеспечивают целостность данных и каскадное удаление. Например:
+- При удалении типа маршрута нельзя удалить маршруты этого типа
+- При удалении маршрута автоматически удаляются все его точки
+- При удалении места автоматически удаляются все точки маршрутов, ссылающиеся на это место
+
+### Процесс работы с данными
+
+1. **Создание маршрута:**
+   - Создается запись в таблице `routes`
+   - Добавляются точки маршрута в таблицу `route_points`
+   - Каждая точка связывается с существующим местом из таблицы `places`
+
+2. **Изменение места:**
+   - Обновляется запись в таблице `places`
+   - Срабатывает триггер `places_changes_trigger`
+   - Отправляется уведомление через `pg_notify`
+   - Сервис `postgres-to-kafka` получает уведомление и отправляет данные в Kafka
+   - Сервис `kafka-to-redis` обновляет данные в Redis
+
+3. **Поиск мест:**
+   - Геопространственные запросы используют индекс `places_coordinates_idx`
+   - Поиск по типу использует связь с таблицей `place_types`
+   - Поиск по маршруту использует индексы `idx_route_points_route_id` и `idx_route_points_place_id` 
