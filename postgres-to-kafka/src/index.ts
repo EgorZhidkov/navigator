@@ -1,4 +1,3 @@
-import { initDatabase } from './db/init';
 import {
   connectProducer,
   disconnectProducer,
@@ -8,10 +7,6 @@ import { logger, pool } from './config';
 
 async function main() {
   try {
-    // Initialize database
-    await initDatabase();
-    logger.info('Database initialized');
-
     // Connect to Kafka
     await connectProducer();
     logger.info('Connected to Kafka');
