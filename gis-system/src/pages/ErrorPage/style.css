@@ -1,0 +1,11 @@
+.app-error-page {
+    background: var(--uav-color-primary);
+
+    &_fullscreen {
+        overflow: hidden;
+        background: var(--uav-color-primary);
+        z-index: 99;
+        position: fixed;
+        inset: 0;
+    }
+}

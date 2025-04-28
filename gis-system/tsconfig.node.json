@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "esnext",
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true
+  },
+
+  "include": ["vite-env.d.ts", "postcss.config.js"]
+}

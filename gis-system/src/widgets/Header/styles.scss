@@ -1,0 +1,17 @@
+.spaceHeader {
+    color: green;
+
+    .ant-menu-item {
+        &-selected {
+            background-color: transparent;
+        }
+
+        &:hover {
+            background-color: transparent;
+        }
+
+        &-active {
+            background: transparent;
+        }
+    }
+}

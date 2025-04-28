@@ -1,0 +1,1 @@
+export { mapFiltersConfig } from './filter'

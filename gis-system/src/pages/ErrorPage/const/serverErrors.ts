@@ -1,0 +1,8 @@
+export const SERVER_ERRORS: Record<string, string | number> = {
+  NOT_FOUND: 404,
+  SERVER_ERROR: 500,
+  UNAUTHORIZED: 401,
+  BAD_REQUEST: 400,
+  FORBIDDEN: 403,
+  PARSING_ERROR: 'PARSING_ERROR',
+}

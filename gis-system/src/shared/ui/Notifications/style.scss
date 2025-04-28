@@ -1,0 +1,35 @@
+@import 'react-toastify/scss/main';
+
+.notification-container {
+  min-width: 200px;
+
+  .notification-container-body {
+    border-radius: 4px;
+    box-shadow: none;
+    background: var(--uav-color-light);
+
+    .Toastify__toast-body {
+      align-items: start;
+      padding: 4px;
+
+      .Toastify__toast-icon {
+        width: auto;
+        min-width: 32px;
+      }
+    }
+  }
+}
+
+#appNotificationContainer {
+  .Toastify__toast-container {
+    z-index: 9999;
+  }
+}
+
+.ant-notification-topRight {
+  .ant-notification-stack {
+    .ant-notification-notice-wrapper {
+      top: 20px;
+    }
+  }
+}

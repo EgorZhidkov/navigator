@@ -1,0 +1,48 @@
+.app-modal {
+    .#{$ant-prefix}-modal {
+        &-content {}
+
+        &-header {}
+
+        &-title {}
+
+        &-close {}
+
+        &-body {
+            overflow: auto;
+
+            max-height: 600px;
+
+            &::-webkit-scrollbar {
+                width: 16px;
+                height: 16px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background-color: transparent;
+            }
+
+            &::-webkit-scrollbar-corner {
+                background-color: $white;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                border: 6px solid transparent;
+                border-radius: 16px;
+                background-clip: content-box;
+                @apply bg-gray-600;
+
+                min-width: 70px;
+                min-height: 70px;
+            }
+
+
+
+            .#{$ant-prefix}-row {}
+
+            .scrollable-content {}
+        }
+
+        &-footer {}
+    }
+}

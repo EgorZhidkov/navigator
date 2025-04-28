@@ -1,0 +1,1 @@
+export { featureYandexMapStore } from './featureYandexMapStore'

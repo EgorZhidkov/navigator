@@ -1,0 +1,21 @@
+.app-sider {
+
+
+    .ant-layout-sider-children {
+        position: relative;
+    }
+
+    .ant-layout-sider-trigger {
+        background-color: grey;
+        width: 50px !important;
+        margin: auto auto;
+    }
+
+    .menu {
+        align-items: center;
+
+        >button {
+            margin: auto auto;
+        }
+    }
+}

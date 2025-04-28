@@ -1,0 +1,63 @@
+// ------------------------------------------
+// -----------------  theme  ----------------
+// ------------------------------------------
+// -- antd
+// -- theme
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+
+@import '../../shared/styles/variables';
+
+@import 'typogrphy';
+
+@import 'layout';
+
+
+@mixin styled-scrollbar($track-bg: $white) {
+  &::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: $track-bg;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background-color: $track-bg;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 6px solid transparent;
+    border-radius: 16px;
+    background-clip: content-box;
+    @apply bg-gray-600;
+
+    min-width: 70px;
+    min-height: 70px;
+  }
+}
+
+.#{$app-prefix}-app {
+  // shared
+  @import '/src/shared/ui/style.scss';
+
+  // // widgets
+  @import '/src/widgets/style.scss';
+
+  // // entities
+
+  // @import 'src/entities/style';
+
+  // // featureFlags
+  // @import 'src/features/style';
+
+  // // pages
+  // @import 'src/pages/style';
+}
+
+// @import 'custom-styles';
