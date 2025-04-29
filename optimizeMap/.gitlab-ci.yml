@@ -1,0 +1,56 @@
+variables:
+  SERVER_IP: '192.168.100.14'
+  SERVER_HOSTNAME: 'vlb-docker-new'
+  DOCKERFILE: 'Dockerfile.build'
+
+stages:
+  - build
+  - deploy
+
+build: 
+  stage: build
+  only: 
+    - main
+    - dev
+  when: manual
+  script:
+    - echo "generating $DOCKERFILE"
+    - echo "FROM node:19.5.0-alpine AS build" >> $DOCKERFILE
+    - echo "WORKDIR /app" >> $DOCKERFILE
+    - echo 'COPY ["package.json", "package-lock.json", "./"]' >> $DOCKERFILE
+    - echo "RUN npm install" >> $DOCKERFILE
+    - echo "COPY . ." >> $DOCKERFILE
+    - echo "COPY . ." >> $DOCKERFILE
+    - echo "EXPOSE 5000" >> $DOCKERFILE
+    - echo 'CMD ["node", "index.js"]' >> $DOCKERFILE
+
+    - echo "building image from Dockerfile"
+    - DOCKER_BUILDKIT=1 docker build --tag $CI_PROJECT_NAME:$CI_PIPELINE_IID -f $DOCKERFILE .
+    - echo "verifying image created..." && docker image ls | grep $CI_PROJECT_NAME
+
+
+deploy:
+  stage: deploy
+  only:
+    - main
+    - dev
+  when: manual
+  script: 
+    - echo "deploying image to $SERVER_HOSTNAME"
+    - docker save -o /home/gitlab-runner/$CI_PROJECT_NAME:$CI_PIPELINE_IID.tar $CI_PROJECT_NAME:$CI_PIPELINE_IID
+    - scp -i /home/gitlab-runner/.ssh/id_rsa /home/gitlab-runner/$CI_PROJECT_NAME:$CI_PIPELINE_IID.tar gitlab-runner@$SERVER_IP:/home/gitlab-runner/
+    - docker image rm $CI_PROJECT_NAME:$CI_PIPELINE_IID
+    - rm /home/gitlab-runner/$CI_PROJECT_NAME:$CI_PIPELINE_IID.tar
+    - ansible $SERVER_HOSTNAME -m shell -a "docker ps -a | grep $CI_PROJECT_NAME | awk '{print \$1}' | xargs docker kill || echo 'no containers to kill' "
+    - ansible $SERVER_HOSTNAME -m shell -a "docker ps -a | grep $CI_PROJECT_NAME | awk '{print \$1}' | xargs docker rm || echo 'no containers to rm' "
+    - ansible $SERVER_HOSTNAME -m shell -a "docker image ls | grep $CI_PROJECT_NAME | awk '{print \$3}' | xargs docker image rm || echo 'no images to rm' "
+    - ansible $SERVER_HOSTNAME -m shell -a "docker load -i /home/gitlab-runner/$CI_PROJECT_NAME:$CI_PIPELINE_IID.tar"
+    - ansible $SERVER_HOSTNAME -m shell -a "docker run --restart unless-stopped -p 8001:5000 --network=dev --name $CI_PROJECT_NAME 
+      -d $CI_PROJECT_NAME:$CI_PIPELINE_IID"
+    - ansible $SERVER_HOSTNAME -m shell -a "docker ps -a | grep $CI_PROJECT_NAME:$CI_PIPELINE_IID"
+    - ansible $SERVER_HOSTNAME -m shell -a "rm /home/gitlab-runner/$CI_PROJECT_NAME:$CI_PIPELINE_IID.tar"
+    - sleep 10 && echo "waiting 10 seconds for logs to generate..." 
+    - ansible $SERVER_HOSTNAME -m shell -a "docker ps -a | grep $CI_PROJECT_NAME | awk '{print \$1}' | xargs docker logs"
+    - ansible $SERVER_HOSTNAME -m shell -a "if docker ps -a | grep $CI_PROJECT_NAME | grep -q Exited; then echo \"Error:container exited\"; exit 1; else echo \"Success\"; fi; exit 0"
+
+

@@ -1,0 +1,29 @@
+import axios from 'axios';
+const token =
+  'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjcxODYyIiwicm9sZXMiOlsiQ0xJRU5UIl0sIm1vYmlsZV90b2tlbiI6ImpNbHgyVkdQZ2RDMjJVTVFNR3I3MGNpeGNhQW1udDFZT211emJrQnhEayIsImV4dGVybmFsX2lkIjoiODY0MjkzIiwidXNlcl90eXBlIjoiY2xpZW50Iiwibm1jX2FjY2Vzc190b2tlbiI6ImpNbHgyVkdQZ2RDMjJVTVFNR3I3MGNpeGNhQW1udDFZT211emJrQnhEayIsIm5tY19yZWZyZXNoX3Rva2VuIjoiVVpYYmdZbjA5WG5DZlN4NXd6bmxDY2tYbjhlTGlaR0pqVDVjRGdBanVNSFp2blVKIiwibm1jX3Rva2VuX3R5cGUiOiJCZWFyZXIiLCJubWNfdXNlcl9pZCI6Ijg2NDI5MyIsIm5tY19leHBpcmVzX2luIjoiODY0MDAwIiwibm1jX2ZpcmViYXNlX3Rva2VuIjoiZXlKaGJHY2lPaUFpVWxNeU5UWWlMQ0FpZEhsd0lqb2dJa3BYVkNJc0lDSnJhV1FpT2lBaU9UZ3lNbVV6WlRobFpUSXdOV00wT1RCbE5UVTRZakV6WVdKak9HSmlZVGN3WmpVeVpqaGxNQ0o5LmV5SnBjM01pT2lBaVptbHlaV0poYzJVdFlXUnRhVzV6WkdzdE1HUm9aV1ZBZG1Wc2IySnBhMlV0WWprM05tWXVhV0Z0TG1kelpYSjJhV05sWVdOamIzVnVkQzVqYjIwaUxDQWljM1ZpSWpvZ0ltWnBjbVZpWVhObExXRmtiV2x1YzJSckxUQmthR1ZsUUhabGJHOWlhV3RsTFdJNU56Wm1MbWxoYlM1bmMyVnlkbWxqWldGalkyOTFiblF1WTI5dElpd2dJbUYxWkNJNklDSm9kSFJ3Y3pvdkwybGtaVzUwYVhSNWRHOXZiR3RwZEM1bmIyOW5iR1ZoY0dsekxtTnZiUzluYjI5bmJHVXVhV1JsYm5ScGRIa3VhV1JsYm5ScGRIbDBiMjlzYTJsMExuWXhMa2xrWlc1MGFYUjVWRzl2Ykd0cGRDSXNJQ0oxYVdRaU9pQWlPRFkwTWpreklpd2dJbWxoZENJNklERTJPVFEyT1RRMU16TXNJQ0psZUhBaU9pQXhOamswTmprNE1UTXpmUS5yZkZ3TnZaRGV6QVJ1aS1CREloNlVzWTRIRlBiSzBCTVNhZlhLbzJvLXhtNk04dFpTTlBVdjM2Y005VTNOUHBZZDJrUkpIWVVmcnlSZERsRWtSSkRPZWdqRWczT3lkRjJiLUJlQXNvbWhIaTdMam9ZeUg5a3luWEo1bGFZSW5OR1JKeThHdTdCa2RUbVVlcEM0MHdXSXhCSGpIeDQ3WGNlY19nS05OMXpybm1naDFOQS1IbHA5UkZoM3diSnZzaExTcTNrbUUwS2VQZTBESzRZNEU4STZSbkdnVkE3M050ZzNBNUtCdU1meWEwSXppajRFQ3pRQ3l1ZmNvOWFYQjhiV01PQV8zYlFrYlVJOVVBOU9BSWZtY252RG9ON252WGRld0V3Q2VaUDVjdTU4WERKcjRnQ3VKdDFBWXNtNVpEdXh3OWxxMHpxbWU2SnNjaWRQeVZKUGciLCJpYXQiOjE2OTQ2OTQ1MzQsImV4cCI6MTY5NDc4MDkzNH0.4AeSxSH1UCqb2wr7zNqbNcQiDWEeg-bqeQLgmv4JkYA';
+const cookies =
+  'qrator_ssid=1694602648.599.WGMxhWwJu7mgIDHZ-brcnm22lilj7oeivcpq0takbe5fh0qbf; _ym_uid=1675469611687351833; _ym_d=1694602652; unauthorizedId=dr1qy68r226d1d29bbe74f68876772e6afce44e8; qrator_jsid=1694602678.961.cBl54yipyHnKbjIK-7k7m2a7d8fhnuhb159u7lh1ci291n7ck; _ym_isad=2; _ym_visorc=b; Function=1';
+
+const axiosHeaders = {
+  headers: {
+    Apikey: token,
+    Authorization: `Bearer ${token}`,
+    Cookie: cookies,
+  },
+};
+
+export const prodInstance = axios.create({
+  headers: axiosHeaders.headers,
+  withCredentials: true,
+});
+
+// prodInstance.interceptors.request.use(
+//   function (config) {
+//     console.log(config.url);
+//     return config;
+//   },
+//   function (error) {
+//     // Do something with request error
+//     return Promise.reject(error);
+//   }
+// );
