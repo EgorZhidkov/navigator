@@ -44,4 +44,4 @@ optimizeMap/errStdErr.txt
 optimizeMap/normalStdout.txt
 optimizeMap/yandexFeature.txt
 optimizeMap/yandexObject.txt
-optimizeMap/index.txt 
+optimizeMap/index.txt optimizeMap/osrm/data/data.osm.pbf
