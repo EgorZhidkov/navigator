@@ -29,4 +29,19 @@ logs/
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# OptimizeMap
+optimizeMap/*.log
+optimizeMap/*.txt
+optimizeMap/.DS_Store
+optimizeMap/.env
+optimizeMap/node_modules/
+optimizeMap/combined.log
+optimizeMap/error.log
+optimizeMap/debug.log
+optimizeMap/errStdErr.txt
+optimizeMap/normalStdout.txt
+optimizeMap/yandexFeature.txt
+optimizeMap/yandexObject.txt
+optimizeMap/index.txt 
