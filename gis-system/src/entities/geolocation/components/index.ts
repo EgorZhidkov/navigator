@@ -1,0 +1,1 @@
+export { GeolocationPlacemark } from './GeolocationPlacemark'
